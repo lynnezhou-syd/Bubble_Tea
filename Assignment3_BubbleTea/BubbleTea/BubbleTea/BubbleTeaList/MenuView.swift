@@ -1,0 +1,125 @@
+//
+//  MenuView.swift
+//  BubbleTea
+//
+//  Created by Lingjing Zhou on 8/5/2024.
+//
+
+import SwiftUI
+
+
+// // Main container for the application's user interface. It holds the various views in a tab-based layout.
+struct MenuView: View {
+    @EnvironmentObject var modelData: ModelData
+    @State private var selectedBubbleTea: BubbleTea?
+    @EnvironmentObject var cartManager: CartManager
+    
+    var body: some View {
+        TabView {
+            HomeView()
+                .tabItem {
+                    Image(systemName: "house")
+                    Text("Home") // Home tab with an icon and text.
+                }
+            
+            // Each BubbleTeaListView represents a different category of bubble teas.
+            BubbleTeaListView(category: "Fruit Tea")
+                .tabItem {
+                    Image(systemName: "leaf.fill")
+                    Text("Fruit Tea")
+                }
+            
+            BubbleTeaListView(category: "Milk Tea")
+                .tabItem {
+                    Image(systemName: "takeoutbag.and.cup.and.straw")
+                    Text("Milk Tea")
+                }
+            
+            BubbleTeaListView(category: "Flower Tea")
+                .tabItem {
+                    Image(systemName: "camera.macro")
+                    Text("Flower Tea")
+                }
+            
+            CartView()
+                .tabItem {
+                    Image(systemName: "cart")
+                    Text("View Cart")
+                }
+        }
+        .environmentObject(ModelData())
+        .environmentObject(CartManager(modelData: ModelData()))
+    }
+}
+
+// HomeView shows an overview or dashboard type of screen, typically the first screen the user sees.
+struct HomeView: View {
+    var body: some View {
+        NavigationView {
+            VStack {
+                
+                AllBubbleTeasView()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
+// Displays a list of bubble teas filtered by category.
+struct BubbleTeaListView: View {
+    @EnvironmentObject var modelData: ModelData
+    @State private var selectedBubbleTea: BubbleTea?
+    var category: String
+    
+    var filteredBubbleTeas: [BubbleTea] {
+        modelData.bubbleTeas.filter { $0.category == category }
+    }
+    
+    var body: some View {
+        NavigationView {
+            List(filteredBubbleTeas, id: \.id) { bubbleTea in
+                Button(action: {
+                    self.selectedBubbleTea = bubbleTea
+                }) {
+                    BubbleTeaRow(bubbleTea: bubbleTea)
+                }
+                .padding(-20)
+            }
+            .navigationTitle(category)
+            .sheet(item: $selectedBubbleTea) { tea in
+                BubbleTeaDetailView(bubbleTea: tea)
+            }
+        }
+    }
+}
+
+// AllBubbleTeasView shows a list of all bubble teas in the model data.
+struct AllBubbleTeasView: View {
+    @EnvironmentObject var modelData: ModelData
+    @State private var selectedBubbleTea: BubbleTea?
+
+    var body: some View {
+        NavigationView {
+            List(modelData.bubbleTeas, id: \.id) { bubbleTea in  
+                Button(action: {
+                    self.selectedBubbleTea = bubbleTea
+                }) {
+                    BubbleTeaRow(bubbleTea: bubbleTea)
+                }
+                .padding(-20)
+            }
+            .navigationTitle("Home")
+            .sheet(item: $selectedBubbleTea) { tea in
+                BubbleTeaDetailView(bubbleTea: tea)
+            }
+        }
+    }
+}
+
+struct MenuView_Previews: PreviewProvider {
+    static var previews: some View {
+        MenuView()
+            .environmentObject(ModelData())
+            .environmentObject(CartManager(modelData: ModelData()))
+    }
+}
